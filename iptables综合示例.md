@@ -1,7 +1,6 @@
 ### 综合示例
 1. iptables防护web服务
-分析：单主机服务防护 <br />
-注意：
+分析：
 	1. 环回口lo处理
 	2. 协议+端口处理
 	3. 状态检测处理
@@ -35,4 +34,29 @@ Escape character is '^]'.
 # iptables -nL			#查看防火墙条目
 ```
 
-2. 
+2. iptables路由SNAT使内网PC上网
+分析：网络拓扑
+```shell
+private <---------------> iptables <---------------> public
+  pc      10.250.2.0/24    router    10.250.1.0/24   network
+```
+配置：为iptables主机添加两块网卡，一个放在内网，一个放在公网。启用内核路由转发功能
+```shell
+# echo "1" > /proc/sys/net/ipv4/ip_forward		#临时开启路由转发
+# echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf 	#永久开启路由转发
+# sysctl -p 	#重新加载sysctl.conf文件
+
+# iptables -t nat -A POSTROUTING -s 10.250.2.0/24 -j SNAT --to 10.250.1.11
+	配置SNAT，将所有内网数据转到10.250.1.11这个IP上
+```
+注：以上操作都是在iptables主机上配置的，对于内网内的主机，需要更改一下IP和网关，将网关地址设置为iptables主机的内网网卡IP <br />
+测试：使用内网主机ping百度正常
+
+3. 拒绝访问服务器本身/拒绝通过服务器访问别的机器(网络拓扑还是采用示例2的)
+分析：
+	1. iptables每个链的作用
+	2. filter表的过滤位置在那个链
+	3. 匹配条件和处理动作
+```shell
+
+```
