@@ -6,9 +6,10 @@ iptables操作命令
 示例：查看详细规则
 ```shell
 # iptables -t filter -nL
-	-v：显示详细信息，包括每条规则的匹配包数量和匹配字节数
+	-v：显示详细信息，包括每条规则的匹配包数量、匹配字节数和网卡接口
 	-n：只显示IP地址和端口号，不显示域名和服务名称
 	-x：在-v的基础上，禁止单位自动换算(K、M)
+# service iptables save		保存对iptables做的操作
 ```
 
 #### 添加规则
@@ -76,13 +77,15 @@ iptables操作命令
 注：--sport 和 --dport 必须配置 -p 使用<br />
 
 #### 动作（处理方式）
-6种处理方式：
+几种处理方式：
 * ACCEPT 	允许
 * DROP	 	丢弃，不给对端任何回应
 * REJECT 	拒绝，给对端回应
 * SNAT	 
 * DNAT		端口映射
 * MASQUERADE 伪装IP地址
+* REDIRECT	端口重定向
+* MARK		打标签
 
 6种处理方式示例：
 ```shell

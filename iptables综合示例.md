@@ -55,8 +55,41 @@ private <---------------> iptables <---------------> public
 3. 拒绝访问服务器本身/拒绝通过服务器访问别的机器(网络拓扑还是采用示例2的)
 分析：
 	1. iptables每个链的作用
-	2. filter表的过滤位置在那个链
+	2. filter表的过滤位置在哪个链
 	3. 匹配条件和处理动作
+示例：拒绝访问
 ```shell
+# iptables -t filter -A INPUT -s 10.250.2.11 -j DROP
+	拒绝内网主机访问iptables主机，此时SNAT规则没有删除，所以依然可以访问外网
+# iptables -F
 
+# iptables -A FORWARD -s 10.250.2.11 -j DROP
+	拒绝内网主机的流量通过iptables主机，数据转发过程中，FORWARD链在POSTROUTING链前面，所以内网主机断网
 ```
+示例：在不同的链上做操作达到相同的目的
+```shell
+# iptables -A INPUT -s 10.250.2.11 -j DROP
+# iptables -A OUTPUT -d 10.250.2.11 -j DROP
+	此两条规则的目的都是为了拒绝内网地址的访问
+```
+注：添加规则时需要尽量在最靠近数据流源的链上，减少设备不必要的资源开销
+
+4. iptables路由DNAT将内网设备端口映射到外网
+分析：网络拓扑采用示例2的
+	1. 因为做了SNAT，所以内网主机能够访问外网
+	2. 本身内网主机无法被外网设备访问
+	3. 内网主机要监听映射出去的端口
+示例：配置DNAT将内网主机的端口映射出去
+```shell
+# iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 9000 -j DNAT --to 10.250.2.11:22
+	将iptables主机上的9000端口与内网主机的22号端口做映射
+
+ssh -p 9000 root@10.250.1.11	ssh连接测试
+```
+示例：配置ADSL
+```shell
+# iptables -t nat -A PREROUTING -i ppp0 -p tcp --dport 81 -j DNAT --to 10.250.2.11:80
+```
+
+小结：
+	所有链名和动作必须大写，表名和匹配则用小写
